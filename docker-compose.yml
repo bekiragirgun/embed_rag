@@ -1,0 +1,86 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: embed_rag_postgres
+    platform: linux/arm64
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: embed_rag
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/init-db.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d embed_rag"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - embed_rag_network
+
+  pgvector:
+    image: pgvector/pgvector:pg16
+    container_name: embed_rag_pgvector
+    platform: linux/arm64
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: embed_rag
+    ports:
+      - "5433:5432"
+    volumes:
+      - ./data/pgvector:/var/lib/postgresql/data
+      - ./init-pgvector.sql:/docker-entrypoint-initdb.d/init-pgvector.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d embed_rag"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - embed_rag_network
+    depends_on:
+      - postgres
+
+  # OpenAI-compatible Embedding Server
+  # SPECTER2 + E5-Large + SciBERT Ensemble
+  embeddings:
+    build:
+      context: .
+      dockerfile: Dockerfile.embeddings
+    container_name: embed_rag_embeddings
+    platform: linux/arm64
+    environment:
+      EMBEDDING_MODEL_DEVICE: cpu
+      EMBEDDING_SERVER_HOST: 0.0.0.0
+      EMBEDDING_SERVER_PORT: 8000
+      LOG_LEVEL: INFO
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./model_cache:/app/model_cache
+    healthcheck:
+      test: ["CMD", "python", "-c", "import requests; requests.get('http://localhost:8000/health')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 120s
+    networks:
+      - embed_rag_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
+networks:
+  embed_rag_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+    driver: local
+  pgvector_data:
+    driver: local
+  embeddings_cache:
+    driver: local

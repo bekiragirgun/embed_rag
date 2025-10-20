@@ -1,0 +1,95 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+pipeline.log
+
+# Cache
+.cache/
+model_cache/
+*.pkl
+*.pickle
+
+# Data
+data/postgres/*
+data/pgvector/*
+chunks.json
+embeddings.json
+
+# Temporary
+*.tmp
+*.temp
+*.bak
+
+# Docker
+.docker
+docker-compose.override.yml
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project specific
+*.ipynb_checkpoints
+extracted_chunks/
+search_results/
+*.xlsx
+*.csv
+
+# Large analysis files
+pdf_quality_scores.json
+embedding_quality_report.json
+*_results.json
+domain_keywords.json
+
+# Generated graphs
+graphs/
+
+# Temporary processing
+markitdown/
