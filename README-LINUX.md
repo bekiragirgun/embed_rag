@@ -6,10 +6,12 @@ This guide is for deploying the RAG system on Ubuntu 25 (64-bit) for heavy proce
 
 - Ubuntu 25 (64-bit)
 - Docker & Docker Compose installed
-- Python 3.9+
+- UV package manager (auto-installed by setup script)
 - At least 16GB RAM
 - 50GB+ free disk space
 - PDF files on USB drive
+
+**Note:** UV will automatically handle Python version management. No need to pre-install Python!
 
 ## Quick Start
 
@@ -29,10 +31,10 @@ chmod +x setup-linux.sh
 ```
 
 This will:
-- ✅ Verify system requirements
+- ✅ Verify system requirements (Docker, UV)
 - ✅ Create necessary directories
-- ✅ Set up Python virtual environment
-- ✅ Install dependencies
+- ✅ Set up Python environment with UV (auto-detects or installs Python)
+- ✅ Install dependencies (much faster with UV!)
 - ✅ Start Docker services (PostgreSQL + Embedding Server)
 
 ### 3. Copy PDF Files
@@ -59,8 +61,11 @@ EMBEDDING_SERVER_URL=http://localhost:8000
 ### 5. Run Data Quality Analysis
 
 ```bash
-source venv/bin/activate
-python3 analyze_data_quality.py
+# Activate UV environment
+source .venv/bin/activate
+
+# Or use UV directly (no activation needed!)
+uv run python3 analyze_data_quality.py
 ```
 
 This will show current data quality and identify issues.
@@ -69,23 +74,31 @@ This will show current data quality and identify issues.
 
 ```bash
 # Full reprocessing (1,252 papers, 2-4 hours)
-python3 main_pipeline.py
+# Option 1: With activation
+source .venv/bin/activate
+nohup python3 main_pipeline.py > processing.log 2>&1 &
+
+# Option 2: Direct with UV (recommended!)
+nohup uv run python3 main_pipeline.py > processing.log 2>&1 &
 ```
 
 **Progress Monitoring:**
 ```bash
 # In another terminal
-tail -f pipeline.log
+tail -f processing.log
+
+# Watch live updates
+watch -n 10 'tail -n 20 processing.log'
 ```
 
 ### 7. Validate Results
 
 ```bash
 # Run quality tests
-python3 test_embedding_quality.py
+uv run python3 test_embedding_quality.py
 
 # Check semantic similarity (target: 78%+)
-python3 test_multi_query.py
+uv run python3 test_multi_query.py
 ```
 
 ### 8. Export Results
@@ -113,6 +126,49 @@ cd /path/to/embed_rag
 tar -xzf results_20251020.tar.gz
 psql $DATABASE_URL < paper_embeddings_v2.sql
 ```
+
+## UV Package Manager Benefits
+
+Why UV is better than traditional pip/venv:
+
+**Speed:**
+```bash
+# UV is 10-100x faster than pip
+uv pip install torch  # Seconds instead of minutes!
+```
+
+**Python Version Management:**
+```bash
+# Use specific Python version
+uv venv --python 3.11
+uv venv --python 3.12
+
+# UV auto-downloads Python if not installed!
+```
+
+**Lock Files:**
+```bash
+# Create lock file for reproducible installs
+uv pip compile requirements.txt -o requirements.lock
+
+# Install from lock file
+uv pip sync requirements.lock
+```
+
+**No Activation Needed:**
+```bash
+# Traditional way
+source .venv/bin/activate
+python3 script.py
+
+# UV way (no activation!)
+uv run python3 script.py
+```
+
+**Global Cache:**
+- UV caches packages globally
+- Installations share dependencies
+- Saves disk space and time
 
 ## Troubleshooting
 

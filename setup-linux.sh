@@ -41,13 +41,15 @@ if ! command -v docker-compose &> /dev/null && ! docker compose version &> /dev/
 fi
 echo -e "${GREEN}✓${NC} Docker Compose installed"
 
-# Check Python 3.9+
-if ! command -v python3 &> /dev/null; then
-    echo -e "${RED}Error: Python 3 not installed${NC}"
-    exit 1
+# Check or install UV
+if ! command -v uv &> /dev/null; then
+    echo "Installing UV package manager..."
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    export PATH="$HOME/.cargo/bin:$PATH"
+    echo -e "${GREEN}✓${NC} UV installed"
+else
+    echo -e "${GREEN}✓${NC} UV already installed"
 fi
-PYTHON_VERSION=$(python3 --version | cut -d' ' -f2 | cut -d'.' -f1,2)
-echo -e "${GREEN}✓${NC} Python $PYTHON_VERSION installed"
 
 # Create necessary directories
 echo ""
@@ -69,19 +71,20 @@ else
     echo -e "${GREEN}✓${NC} .env already exists"
 fi
 
-# Create Python virtual environment
+# Setup Python environment with UV
 echo ""
-echo "Setting up Python virtual environment..."
-if [ ! -d "venv" ]; then
-    python3 -m venv venv
-    echo -e "${GREEN}✓${NC} Virtual environment created"
+echo "Setting up Python environment with UV..."
+
+# UV will automatically create venv and install dependencies
+# Specify Python version if needed: uv venv --python 3.11
+if [ ! -d ".venv" ]; then
+    uv venv
+    echo -e "${GREEN}✓${NC} Virtual environment created with UV"
 fi
 
-# Activate and install dependencies
-source venv/bin/activate
-echo "Installing Python dependencies..."
-pip install --upgrade pip > /dev/null
-pip install -r requirements.txt
+# Install dependencies with UV (much faster than pip!)
+echo "Installing dependencies with UV..."
+uv pip install -r requirements.txt
 echo -e "${GREEN}✓${NC} Dependencies installed"
 
 # Check PDF directory
@@ -108,8 +111,11 @@ echo ""
 echo "Next steps:"
 echo "  1. Copy PDF files to: data/pdfs/"
 echo "  2. Update .env file with your settings"
-echo "  3. Run processing: python3 main_pipeline.py"
+echo "  3. Activate environment: source .venv/bin/activate"
+echo "  4. Run processing: python3 main_pipeline.py"
 echo ""
-echo "To activate virtual environment:"
-echo "  source venv/bin/activate"
+echo "UV Commands:"
+echo "  uv pip install <package>  - Install new package"
+echo "  uv pip list               - List installed packages"
+echo "  uv venv --python 3.11     - Use specific Python version"
 echo ""
