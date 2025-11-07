@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "context-manager": {
+      "command": "python",
+      "args": [
+        "/FULL/PATH/TO/mcp_server/server.py"
+      ],
+      "env": {
+        "CONTEXT_STORAGE_DIR": "~/.mcp_contexts",
+        "PYTHONPATH": "/FULL/PATH/TO/mcp_server"
+      }
+    }
+  }
+}
